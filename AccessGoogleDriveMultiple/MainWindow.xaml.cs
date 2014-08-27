@@ -24,23 +24,30 @@ using System.Threading;
 using System.Diagnostics;
 
 using System.Windows.Forms;
-using AccessGoogleDriveMultiple.Binding;
-using AccessGoogleDriveMultiple.Model;
+using SyncMultipleGoogleDrives.Binding;
+using SyncMultipleGoogleDrives.Model;
+using System.Xml;
+using System.IO.IsolatedStorage;
+using System.IO;
 
-namespace AccessGoogleDriveMultiple
+namespace SyncMultipleGoogleDrives
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
+
+        private XmlDocument _xmlGoogleAccountSettings = null;
+
         public MainWindow()
         {
             InitializeComponent();
 
             if (string.IsNullOrEmpty(Properties.Settings.Default.rootFolder))
             {
-                if(System.IO.Directory.Exists(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments))){
+                if (System.IO.Directory.Exists(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)))
+                {
                     txtRootFolder.Text = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                     Properties.Settings.Default.rootFolder = txtRootFolder.Text;
                     Properties.Settings.Default.Save();
@@ -52,13 +59,17 @@ namespace AccessGoogleDriveMultiple
             }
 
 
-            var itemProvider = new ItemProvider();
-
-            var items = itemProvider.GetItems(txtRootFolder.Text);
-
-            DataContext = items;
+            if (System.IO.Directory.Exists(txtRootFolder.Text))
+            {
+                var itemProvider = new ItemProvider();
+                var items = itemProvider.GetItems(txtRootFolder.Text);
+                DataContext = items;
+            }
 
             txtRootFolder.TextChanged += txtRootFolder_TextChanged;
+
+            GetGoogleAccountSettings();
+
 
         }
 
@@ -76,74 +87,80 @@ namespace AccessGoogleDriveMultiple
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            //UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-            //    new ClientSecrets
-            //    {
-            //        ClientId = "846715596453-539dui7i3rf5kqmmkenfnkk1i2d5dhlj.apps.googleusercontent.com",
-            //        ClientSecret = "U-V5GMN3qk5Z6ubSql1xYD9M",
-            //    },
-            //    new[] { DriveService.Scope.Drive },
-            //    "user",
-            //    CancellationToken.None, 
-            //    new FileDataStore("credentials_koen.mestdagh")).Result;
 
-            UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-    new ClientSecrets
-    {
-        ClientId = "610519876157-svk4euh3mk2bt37j43engm1uciid0jc9.apps.googleusercontent.com",
-        ClientSecret = "2x4HYu0kucG6wXqPYNBZ8dmV",
-    },
-    new[] { DriveService.Scope.Drive },
-    "user",
-    CancellationToken.None,
-    new FileDataStore("credentials_koen.mestdagh2014")).Result;
+            GoogleAccounts ga = new GoogleAccounts(_xmlGoogleAccountSettings);
+            ga.ShowDialog();
 
-            // Create the service.
-            var service = new DriveService(new BaseClientService.Initializer()
-            {
-                HttpClientInitializer = credential,
-                ApplicationName = "Drive API Sample",
-            });
 
-            List<File> lstFile = retrieveAllFiles(service);
-            if (lstFile != null && lstFile.Count > 0)
-            {
-                foreach (File f in lstFile)
-                {
-                    if (f.MimeType.EndsWith("apps.folder"))
-                    {
-                        Trace.WriteLine(f.Title);
-                    }
-                    else if (f.Title.Contains("pellikaan"))
-                    {
-                        Trace.WriteLine(f.Title);
-                    }
-                    else
-                    {
-                        Trace.WriteLine(f.Title);
-                    }
-                }
-            }
 
-            //File body = new File();
-            //body.Title = "My document";
-            //body.Description = "A test document";
-            //body.MimeType = "text/plain";
+            //        //UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+            //        //    new ClientSecrets
+            //        //    {
+            //        //        ClientId = "846715596453-539dui7i3rf5kqmmkenfnkk1i2d5dhlj.apps.googleusercontent.com",
+            //        //        ClientSecret = "U-V5GMN3qk5Z6ubSql1xYD9M",
+            //        //    },
+            //        //    new[] { DriveService.Scope.Drive },
+            //        //    "user",
+            //        //    CancellationToken.None, 
+            //        //    new FileDataStore("credentials_koen.mestdagh")).Result;
 
-            //byte[] byteArray = System.IO.File.ReadAllBytes("document.txt");
-            //System.IO.MemoryStream stream = new System.IO.MemoryStream(byteArray);
+            //        UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+            //new ClientSecrets
+            //{
+            //    ClientId = "610519876157-svk4euh3mk2bt37j43engm1uciid0jc9.apps.googleusercontent.com",
+            //    ClientSecret = "2x4HYu0kucG6wXqPYNBZ8dmV",
+            //},
+            //new[] { DriveService.Scope.Drive },
+            //"user",
+            //CancellationToken.None,
+            //new FileDataStore("credentials_koen.mestdagh2014")).Result;
 
-            //FilesResource.InsertMediaUpload request = service.Files.Insert(body, stream, "text/plain");
-            //request.Upload();
+            //        // Create the service.
+            //        var service = new DriveService(new BaseClientService.Initializer()
+            //        {
+            //            HttpClientInitializer = credential,
+            //            ApplicationName = "Drive API Sample",
+            //        });
 
-            //File file = request.ResponseBody;
-            //Console.WriteLine("File id: " + file.Id);
+            //        List<File> lstFile = retrieveAllFiles(service);
+            //        if (lstFile != null && lstFile.Count > 0)
+            //        {
+            //            foreach (File f in lstFile)
+            //            {
+            //                if (f.MimeType.EndsWith("apps.folder"))
+            //                {
+            //                    Trace.WriteLine(f.Title);
+            //                }
+            //                else if (f.Title.Contains("pellikaan"))
+            //                {
+            //                    Trace.WriteLine(f.Title);
+            //                }
+            //                else
+            //                {
+            //                    Trace.WriteLine(f.Title);
+            //                }
+            //            }
+            //        }
+
+            //        //File body = new File();
+            //        //body.Title = "My document";
+            //        //body.Description = "A test document";
+            //        //body.MimeType = "text/plain";
+
+            //        //byte[] byteArray = System.IO.File.ReadAllBytes("document.txt");
+            //        //System.IO.MemoryStream stream = new System.IO.MemoryStream(byteArray);
+
+            //        //FilesResource.InsertMediaUpload request = service.Files.Insert(body, stream, "text/plain");
+            //        //request.Upload();
+
+            //        //File file = request.ResponseBody;
+            //        //Console.WriteLine("File id: " + file.Id);
         }
 
 
-        public static List<File> retrieveAllFiles(DriveService service)
+        public static List<Google.Apis.Drive.v2.Data.File> retrieveAllFiles(DriveService service)
         {
-            List<File> result = new List<File>();
+            List<Google.Apis.Drive.v2.Data.File> result = new List<Google.Apis.Drive.v2.Data.File>();
             FilesResource.ListRequest request = service.Files.List();
 
             do
@@ -179,8 +196,47 @@ namespace AccessGoogleDriveMultiple
                 Properties.Settings.Default.Save();
             }
 
-            
+        }
 
+        private void GetGoogleAccountSettings()
+        {
+            IsolatedStorageFile isoStore = IsolatedStorageFile.GetStore(IsolatedStorageScope.User | IsolatedStorageScope.Assembly, null, null);
+
+            if (isoStore.FileExists("SyncMultipleGoogleDrives.xml"))
+            {
+                Trace.WriteLine("The file already exists!");
+                using (IsolatedStorageFileStream isoStream = new IsolatedStorageFileStream("SyncMultipleGoogleDrives.xml", FileMode.Open, isoStore))
+                {
+                    using (StreamReader reader = new StreamReader(isoStream))
+                    {
+                        _xmlGoogleAccountSettings = new XmlDocument();
+                        _xmlGoogleAccountSettings.Load(reader);
+                        //Console.WriteLine("Reading contents:");
+                        //Console.WriteLine(reader.ReadToEnd());
+                    }
+                }
+            }
+            else
+            {
+                using (IsolatedStorageFileStream isoStream = new IsolatedStorageFileStream("SyncMultipleGoogleDrives.xml", FileMode.CreateNew, isoStore))
+                {
+                    using (StreamWriter writer = new StreamWriter(isoStream))
+                    {
+                        _xmlGoogleAccountSettings = new XmlDocument();
+                        // Write down the XML declaration
+                        XmlDeclaration xmlDeclaration = _xmlGoogleAccountSettings.CreateXmlDeclaration("1.0", "utf-8", null);
+
+                        // Create the root element
+                        XmlElement rootNode = _xmlGoogleAccountSettings.CreateElement("GoogleAccounts");
+                        _xmlGoogleAccountSettings.InsertBefore(xmlDeclaration, _xmlGoogleAccountSettings.DocumentElement);
+                        _xmlGoogleAccountSettings.AppendChild(rootNode);
+                        writer.Write(_xmlGoogleAccountSettings.OuterXml);
+
+                        //writer.WriteLine("Hello Isolated Storage");
+                        //Console.WriteLine("You have written to the file.");
+                    }
+                }
+            }
         }
     }
 }

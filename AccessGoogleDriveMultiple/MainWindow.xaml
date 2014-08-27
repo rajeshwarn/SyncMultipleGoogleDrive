@@ -1,7 +1,7 @@
-﻿<Window x:Class="AccessGoogleDriveMultiple.MainWindow"
+﻿<Window x:Class="SyncMultipleGoogleDrives.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:Model="clr-namespace:AccessGoogleDriveMultiple.Model"
+        xmlns:Model="clr-namespace:SyncMultipleGoogleDrives.Model"
         Title="MainWindow" Height="350" Width="525"
         >
 
@@ -9,17 +9,17 @@
 
         <HierarchicalDataTemplate DataType="{x:Type Model:DirectoryItem}"
                                   ItemsSource="{Binding Items}">
-            <TextBlock Text="{Binding Path=Name}" ToolTip="{Binding Path=Path}" />
+            <TextBlock Text="{Binding Path=Name}" ToolTip="{Binding Path=Path}" Foreground="{Binding Path=ForeColorString}" />
         </HierarchicalDataTemplate>
 
         <DataTemplate DataType="{x:Type Model:FileItem}">
-            <TextBlock Text="{Binding Path=Name}" ToolTip="{Binding Path=Path}" />
+            <TextBlock Text="{Binding Path=Name}" ToolTip="{Binding Path=Path}"  Foreground="{Binding Path=ForeColorString}" />
         </DataTemplate>
 
     </Window.Resources>
 
     <Grid>
-        <Button Content="Button" HorizontalAlignment="Left" Margin="378,6,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
+        <Button Content="Accounts" HorizontalAlignment="Left" Margin="432,10,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
         <Label Content="Root folder" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="111" Padding="0"/>
         <TextBox x:Name="txtRootFolder" HorizontalAlignment="Left" Height="23" Margin="10,31,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="417"/>
         <Button Content="Button" HorizontalAlignment="Left" Margin="432,31,0,0" VerticalAlignment="Top" Width="75" Height="23" Click="Button_Click_1"/>

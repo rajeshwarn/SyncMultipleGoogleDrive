@@ -7,8 +7,8 @@
     <ProjectGuid>{CD065013-FC41-46E3-AF9B-404A9C3F3B4F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AccessGoogleDriveMultiple</RootNamespace>
-    <AssemblyName>AccessGoogleDriveMultiple</AssemblyName>
+    <RootNamespace>SyncMultipleGoogleDrives</RootNamespace>
+    <AssemblyName>SyncMultipleGoogleDrives</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -99,6 +99,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Page Include="GoogleAccounts.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -109,6 +113,9 @@
     </Compile>
     <Compile Include="Folder.cs" />
     <Compile Include="FolderBinding.cs" />
+    <Compile Include="GoogleAccounts.xaml.cs">
+      <DependentUpon>GoogleAccounts.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

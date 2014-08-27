@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace AccessGoogleDriveMultiple.Properties {
+namespace SyncMultipleGoogleDrives.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -32,6 +32,17 @@ namespace AccessGoogleDriveMultiple.Properties {
             }
             set {
                 this["rootFolder"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        public global::System.Collections.Specialized.StringCollection googleAccounts {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["googleAccounts"]));
+            }
+            set {
+                this["googleAccounts"] = value;
             }
         }
     }

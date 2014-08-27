@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using AccessGoogleDriveMultiple.Model;
+using SyncMultipleGoogleDrives.Model;
+using System.Diagnostics;
 
-namespace AccessGoogleDriveMultiple.Binding
+
+namespace SyncMultipleGoogleDrives.Binding
 {
     public class ItemProvider
     {
@@ -12,28 +15,47 @@ namespace AccessGoogleDriveMultiple.Binding
 
             var dirInfo = new DirectoryInfo(path);
 
-            foreach(var directory in dirInfo.GetDirectories())
+            try
             {
-                var item = new DirectoryItem
-                               {
-                                   Name = directory.Name,
-                                   Path = directory.FullName,
-                                   Items = GetItems(directory.FullName)
-                               };
+                foreach (var directory in dirInfo.GetDirectories())
+                {
+                    var item = new DirectoryItem
+                    {
+                        Name = directory.Name,
+                        Path = directory.FullName,
+                        Items = GetItems(directory.FullName)
+                    };
 
-                items.Add(item);
+                    items.Add(item);
+                }
+
+
+            }
+            catch(Exception ex)
+            {
+                Trace.WriteLine(ex.Message + Environment.NewLine + ex.StackTrace, "EXCEPTION GetItems");
             }
 
-            foreach(var file in dirInfo.GetFiles())
-            {
-                var item = new FileItem
-                               {
-                                   Name = file.Name, 
-                                   Path = file.FullName
-                               };
 
-                items.Add(item);
+            try
+            {
+                foreach (var file in dirInfo.GetFiles())
+                {
+                    var item = new FileItem
+                    {
+                        Name = file.Name,
+                        Path = file.FullName
+                    };
+
+                    items.Add(item);
+                }
+
             }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex.Message + Environment.NewLine + ex.StackTrace, "EXCEPTION GetItems");
+            }
+
 
             return items;
         }
