@@ -40,6 +40,11 @@ namespace SyncMultipleGoogleDrives
 
         private XmlDocument _xmlGoogleAccountSettings = null;
 
+        private List<GoogleAccount> _GoogleAccounts = null;
+
+        private ItemProvider itemProvider;
+        private List<Item> items;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -59,18 +64,15 @@ namespace SyncMultipleGoogleDrives
             }
 
 
-            if (System.IO.Directory.Exists(txtRootFolder.Text))
-            {
-                var itemProvider = new ItemProvider();
-                var items = itemProvider.GetItems(txtRootFolder.Text);
-                DataContext = items;
-            }
+            itemProvider = new ItemProvider();
+            items = itemProvider.GetItems(txtRootFolder.Text);
+            DataContext = items;
 
             txtRootFolder.TextChanged += txtRootFolder_TextChanged;
 
             GetGoogleAccountSettings();
-
-
+            AdaptGoogleAccountList();
+            SetColorsOfItemList(items);
         }
 
         void txtRootFolder_TextChanged(object sender, TextChangedEventArgs e)
@@ -82,16 +84,33 @@ namespace SyncMultipleGoogleDrives
 
             DataContext = items;
 
-
+            if (_GoogleAccounts != null && _GoogleAccounts.Count > 0)
+            {
+                foreach (GoogleAccount ga in _GoogleAccounts)
+                {
+                    ga.ClearList();
+                }
+            }
+            SetColorsOfItemList(items);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
 
-            GoogleAccounts ga = new GoogleAccounts(_xmlGoogleAccountSettings);
-            ga.ShowDialog();
+            GoogleAccounts gAW = new GoogleAccounts(_xmlGoogleAccountSettings);
+            gAW.ShowDialog();
+            SaveGoogleAccountsXML();
 
+            AdaptGoogleAccountList();
 
+            if (_GoogleAccounts != null && _GoogleAccounts.Count > 0)
+            {
+                foreach (GoogleAccount ga in _GoogleAccounts)
+                {
+                    ga.ClearList();
+                }
+            }
+            SetColorsOfItemList(items);
 
             //        //UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
             //        //    new ClientSecrets
@@ -238,5 +257,148 @@ namespace SyncMultipleGoogleDrives
                 }
             }
         }
+
+        private void SaveGoogleAccountsXML()
+        {
+            if (_xmlGoogleAccountSettings != null)
+            {
+                IsolatedStorageFile isoStore = IsolatedStorageFile.GetStore(IsolatedStorageScope.User | IsolatedStorageScope.Assembly, null, null);
+
+                using (IsolatedStorageFileStream isoStream = new IsolatedStorageFileStream("SyncMultipleGoogleDrives.xml", FileMode.Create, isoStore))
+                {
+                    using (StreamWriter writer = new StreamWriter(isoStream))
+                    {
+
+                        writer.Write(_xmlGoogleAccountSettings.OuterXml);
+
+                    }
+                }
+
+            }
+        }
+
+        private void AdaptGoogleAccountList()
+        {
+
+            if (_GoogleAccounts != null)
+            {
+                _GoogleAccounts.Clear();
+            }
+            else
+            {
+                _GoogleAccounts = new List<GoogleAccount>();
+            }
+
+            if (_xmlGoogleAccountSettings != null)
+            {
+                if (_xmlGoogleAccountSettings.HasChildNodes)
+                {
+                    XmlNodeList lstNodes = _xmlGoogleAccountSettings.GetElementsByTagName("GoogleAccount");
+                    if (lstNodes != null && lstNodes.Count > 0)
+                    {
+                        foreach (XmlNode oNode in lstNodes)
+                        {
+                            GoogleAccount ga = new GoogleAccount();
+                            XmlNodeList lstNodesPerAccount = oNode.ChildNodes;
+                            if (lstNodesPerAccount != null && lstNodesPerAccount.Count > 0)
+                            {
+                                foreach (XmlNode oNodeChild in lstNodesPerAccount)
+                                {
+                                    switch (oNodeChild.Name)
+                                    {
+                                        case "Name":
+                                            ga.Name = oNodeChild.InnerText;
+                                            break;
+                                        case "Email":
+                                            ga.Email = oNodeChild.InnerText;
+                                            break;
+                                        case "ClientId":
+                                            ga.ClientId = oNodeChild.InnerText;
+                                            break;
+                                        case "ClientSecret":
+                                            ga.ClientSecret = oNodeChild.InnerText;
+                                            break;
+                                        case "FileDataStore":
+                                            ga.FileDataStore = oNodeChild.InnerText;
+                                            break;
+                                        case "FileFilter":
+                                            ga.FileFilter = oNodeChild.InnerText;
+                                            break;
+                                    }
+                                }
+                            }
+                            _GoogleAccounts.Add(ga);
+                        }
+                    }
+                }
+
+
+            }
+
+
+        }
+
+        private void SetColorsOfItemList(List<Item> itemsToSet)
+        {
+            if (itemsToSet != null && itemsToSet.Count > 0)
+            {
+                if (_GoogleAccounts != null && _GoogleAccounts.Count > 0)
+                {
+                    foreach (Item item in itemsToSet)
+                    {
+                        if (item.IsFolder)
+                        {
+                            string _forecolor = "Gray";
+                            if (!string.IsNullOrEmpty(item.Name))
+                            {
+                                foreach (GoogleAccount ga in _GoogleAccounts)
+                                {
+                                    if (ga.FileFilter == "*")
+                                    {
+                                        _forecolor = "Green";
+                                        ga.AddToList(item);
+                                    }
+                                    else
+                                    {
+                                        if (item.Name.StartsWith(ga.FileFilter.Replace("*", "")))
+                                        {
+                                            _forecolor = "Green";
+                                            ga.AddToList(item);
+                                        }
+                                    }
+                                }
+                                item.ForeColorString = _forecolor;
+                            }
+                            SetColorsOfItemList(((DirectoryItem)item).Items);
+                        }
+                        else
+                        {
+                            string pathminushome = item.Path.Replace(txtRootFolder.Text, "");
+                            string _forecolor = "Gray";
+                            foreach (GoogleAccount ga in _GoogleAccounts)
+                            {
+                                if (ga.FileFilter == "*")
+                                {
+                                    _forecolor = "Green";
+                                    ga.AddToList(item);
+                                }
+                                else
+                                {
+                                    if (pathminushome.Contains("\\" + ga.FileFilter.Replace("*", "")))
+                                    {
+                                        _forecolor = "Green";
+                                        ga.AddToList(item);
+                                    }
+                                }
+                            }
+                            item.ForeColorString = _forecolor;
+
+                        }
+
+                    }
+                }
+            }
+        }
     }
+
 }

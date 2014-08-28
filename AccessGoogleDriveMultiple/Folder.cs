@@ -12,6 +12,7 @@ namespace SyncMultipleGoogleDrives.Model
     {
         public string Name { get; set; }
         public string Path { get; set; }
+        public bool IsFolder { get; set; }
 
         //private Color _ForeColor = (Color)ColorConverter.ConvertFromString("AliceBlue");
         //public Color ForeColor
@@ -44,7 +45,7 @@ namespace SyncMultipleGoogleDrives.Model
 {
     public class FileItem : Item
     {
-
+        
     }
 }
 
@@ -57,6 +58,8 @@ namespace SyncMultipleGoogleDrives.Model
         public DirectoryItem()
         {
             Items = new List<Item>();
+            
         }
+        
     }
 }

@@ -113,6 +113,7 @@
     </Compile>
     <Compile Include="Folder.cs" />
     <Compile Include="FolderBinding.cs" />
+    <Compile Include="GoogleAccount.cs" />
     <Compile Include="GoogleAccounts.xaml.cs">
       <DependentUpon>GoogleAccounts.xaml</DependentUpon>
     </Compile>

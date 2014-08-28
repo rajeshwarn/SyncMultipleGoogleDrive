@@ -11,6 +11,11 @@ namespace SyncMultipleGoogleDrives.Binding
     {
         public List<Item> GetItems(string path)
         {
+            if (!System.IO.Directory.Exists(path))
+            {
+                return null;
+            }
+
             var items = new List<Item>();
 
             var dirInfo = new DirectoryInfo(path);
@@ -23,7 +28,8 @@ namespace SyncMultipleGoogleDrives.Binding
                     {
                         Name = directory.Name,
                         Path = directory.FullName,
-                        Items = GetItems(directory.FullName)
+                        Items = GetItems(directory.FullName),
+                        IsFolder = true
                     };
 
                     items.Add(item);
@@ -44,7 +50,8 @@ namespace SyncMultipleGoogleDrives.Binding
                     var item = new FileItem
                     {
                         Name = file.Name,
-                        Path = file.FullName
+                        Path = file.FullName,
+                        IsFolder = false
                     };
 
                     items.Add(item);

@@ -1,14 +1,25 @@
 ﻿<Window x:Class="SyncMultipleGoogleDrives.GoogleAccounts"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="GoogleAccounts" Height="300" Width="300">
+        Title="GoogleAccounts" Height="300" Width="692.15">
     <Grid>
-        <ComboBox x:Name="comboGoogleAccounts" ItemsSource="{Binding cbItems}" SelectedItem="{Binding SelectedcbItem}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="272"/>
-        <TextBox x:Name="txtName" HorizontalAlignment="Left" Height="23" Margin="100,37,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="120" VerticalContentAlignment="Center"/>
+        <ComboBox x:Name="comboGoogleAccounts" ItemsSource="{Binding cbItems}" SelectedItem="{Binding SelectedcbItem}" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="664" SelectionChanged="comboGoogleAccounts_SelectionChanged"/>
+        <TextBox x:Name="txtName" HorizontalAlignment="Left" Height="23" Margin="100,37,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="574" VerticalContentAlignment="Center"/>
         <Label Content="Name" HorizontalAlignment="Left" Margin="10,37,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.266,-0.009" Width="85" Height="23" Padding="0" VerticalContentAlignment="Center"/>
         <Button x:Name="btnSave" Content="Save" HorizontalAlignment="Left" Margin="10,239,0,0" VerticalAlignment="Top" Width="75" Click="btnSave_Click"/>
         <Button x:Name="btnCancel" Content="Cancel" HorizontalAlignment="Left" Margin="207,239,0,0" VerticalAlignment="Top" Width="75"/>
         <Button x:Name="btnRemove" Content="Remove" HorizontalAlignment="Left" Margin="109,239,0,0" VerticalAlignment="Top" Width="75"/>
+        <TextBox x:Name="txtEmail" HorizontalAlignment="Left" Height="23" Margin="100,65,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="574" VerticalContentAlignment="Center"/>
+        <Label Content="Email" HorizontalAlignment="Left" Margin="10,65,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.266,-0.009" Width="85" Height="23" Padding="0" VerticalContentAlignment="Center"/>
+        <TextBox x:Name="txtClientID" HorizontalAlignment="Left" Height="23" Margin="100,93,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="574" VerticalContentAlignment="Center"/>
+        <Label Content="ClientId" HorizontalAlignment="Left" Margin="10,93,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.266,-0.009" Width="85" Height="23" Padding="0" VerticalContentAlignment="Center"/>
+        <TextBox x:Name="txtClientSecret" HorizontalAlignment="Left" Height="23" Margin="100,121,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="574" VerticalContentAlignment="Center"/>
+        <Label Content="ClientSecret" HorizontalAlignment="Left" Margin="10,121,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.266,-0.009" Width="85" Height="23" Padding="0" VerticalContentAlignment="Center"/>
+        <TextBox x:Name="txtFileDataStore" HorizontalAlignment="Left" Height="23" Margin="100,149,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="574" VerticalContentAlignment="Center"/>
+        <Label Content="FileDataStore" HorizontalAlignment="Left" Margin="10,149,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.266,-0.009" Width="85" Height="23" Padding="0" VerticalContentAlignment="Center"/>
+        <TextBox x:Name="txtFileFilter" HorizontalAlignment="Left" Height="23" Margin="100,177,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="574" VerticalContentAlignment="Center"/>
+        <Label Content="FileFilter" HorizontalAlignment="Left" Margin="10,177,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.266,-0.009" Width="85" Height="23" Padding="0" VerticalContentAlignment="Center"/>
+        <Button x:Name="btnAccountTest" Content="Account setup" HorizontalAlignment="Left" Margin="100,205,0,0" VerticalAlignment="Top" Width="182" RenderTransformOrigin="-0.277,0.135" Click="btnAccountTest_Click"/>
 
     </Grid>
 </Window>
