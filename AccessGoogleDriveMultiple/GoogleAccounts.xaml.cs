@@ -89,13 +89,13 @@ namespace SyncMultipleGoogleDrives
             if (!string.IsNullOrEmpty(this.txtName.Text))
             {
 
-                SaveAccount(txtName.Text, txtEmail.Text, txtClientID.Text, txtClientSecret.Text, txtFileDataStore.Text, txtFileFilter.Text);
+                SaveAccount(txtName.Text, txtEmail.Text, txtClientID.Text, txtClientSecret.Text, txtFileDataStore.Text, txtFileFilter.Text, txtRootFolder.Text);
 
             }
             this.Close();
         }
 
-        private void SaveAccount(string Name, string Email, string ClientId, string ClientSecret, string FileDataStore, string FileFilter)
+        private void SaveAccount(string Name, string Email, string ClientId, string ClientSecret, string FileDataStore, string FileFilter, string RootFolder)
         {
             // checks
             if (!string.IsNullOrEmpty(Name) &&
@@ -103,7 +103,8 @@ namespace SyncMultipleGoogleDrives
                 !string.IsNullOrEmpty(ClientId) &&
                 !string.IsNullOrEmpty(ClientSecret) &&
                 !string.IsNullOrEmpty(FileDataStore) &&
-                !string.IsNullOrEmpty(FileFilter))
+                !string.IsNullOrEmpty(FileFilter) &&
+                !string.IsNullOrEmpty(RootFolder))
             {
 
                 if (gaXML != null)
@@ -142,7 +143,7 @@ namespace SyncMultipleGoogleDrives
                             }
                             else
                             {
-                                AddNode(Name, Email, ClientId, ClientSecret, FileDataStore, FileFilter);
+                                AddNode(Name, Email, ClientId, ClientSecret, FileDataStore, FileFilter, RootFolder);
                             }
                         }
                     }
@@ -185,7 +186,7 @@ namespace SyncMultipleGoogleDrives
             }
 
         }
-        private void AddNode(string Name, string Email, string ClientId, string ClientSecret, string FileDataStore, string FileFilter)
+        private void AddNode(string Name, string Email, string ClientId, string ClientSecret, string FileDataStore, string FileFilter, string RootFolder)
         {
 
             XmlNode rootNode;
@@ -209,6 +210,8 @@ namespace SyncMultipleGoogleDrives
                 filedatastoreNode.InnerText = FileDataStore;
                 XmlNode filefilterNode = gaXML.CreateElement("FileFilter");
                 filefilterNode.InnerText = FileFilter;
+                XmlNode rootfolderNode = gaXML.CreateElement("RootFolder");
+                rootfolderNode.InnerText = RootFolder;
 
                 accountNode.AppendChild(nameNode);
                 accountNode.AppendChild(emailNode);
@@ -240,6 +243,7 @@ namespace SyncMultipleGoogleDrives
                         txtClientSecret.Text = "";
                         txtFileDataStore.Text = "";
                         txtFileFilter.Text = "";
+                        txtRootFolder.Text = "";
 
 
                         return;
@@ -297,6 +301,12 @@ namespace SyncMultipleGoogleDrives
                                                     txtFileFilter.Text = oNodeChild.InnerText;
                                                 }
                                                 break;
+                                            case "RootFolder":
+                                                if (_nodefound)
+                                                {
+                                                    txtRootFolder.Text = oNodeChild.InnerText;
+                                                }
+                                                break;
                                             default:
                                                 break;
                                         }
@@ -322,8 +332,7 @@ namespace SyncMultipleGoogleDrives
                 !string.IsNullOrEmpty(txtEmail.Text) &&
                 !string.IsNullOrEmpty(txtClientID.Text ) &&
                 !string.IsNullOrEmpty(txtClientSecret.Text ) &&
-                !string.IsNullOrEmpty(txtFileDataStore.Text) &&
-                !string.IsNullOrEmpty(txtFileFilter.Text))
+                !string.IsNullOrEmpty(txtFileDataStore.Text))
             {
                 UserCredential credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
                     new ClientSecrets
@@ -337,6 +346,8 @@ namespace SyncMultipleGoogleDrives
                     new FileDataStore(txtFileDataStore.Text)).Result;
             }
         }
+
+
 
 
     }

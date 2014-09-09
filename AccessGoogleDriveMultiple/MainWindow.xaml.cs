@@ -45,9 +45,15 @@ namespace SyncMultipleGoogleDrives
         private ItemProvider itemProvider;
         private List<Item> items;
 
+        private CurrentSynchro cs;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            cs = new CurrentSynchro();
+
+            DataContext = cs;
 
             if (string.IsNullOrEmpty(Properties.Settings.Default.rootFolder))
             {
@@ -66,7 +72,7 @@ namespace SyncMultipleGoogleDrives
 
             itemProvider = new ItemProvider();
             items = itemProvider.GetItems(txtRootFolder.Text);
-            DataContext = items;
+            tvFilesFolders.DataContext = items;
 
             txtRootFolder.TextChanged += txtRootFolder_TextChanged;
 
@@ -82,13 +88,13 @@ namespace SyncMultipleGoogleDrives
 
             var items = itemProvider.GetItems(txtRootFolder.Text);
 
-            DataContext = items;
+            tvFilesFolders.DataContext = items;
 
             if (_GoogleAccounts != null && _GoogleAccounts.Count > 0)
             {
                 foreach (GoogleAccount ga in _GoogleAccounts)
                 {
-                    ga.ClearList();
+                    ga.ClearListToUpload();
                 }
             }
             SetColorsOfItemList(items);
@@ -107,7 +113,7 @@ namespace SyncMultipleGoogleDrives
             {
                 foreach (GoogleAccount ga in _GoogleAccounts)
                 {
-                    ga.ClearList();
+                    ga.ClearListToUpload();
                 }
             }
             SetColorsOfItemList(items);
@@ -177,28 +183,6 @@ namespace SyncMultipleGoogleDrives
         }
 
 
-        public static List<Google.Apis.Drive.v2.Data.File> retrieveAllFiles(DriveService service)
-        {
-            List<Google.Apis.Drive.v2.Data.File> result = new List<Google.Apis.Drive.v2.Data.File>();
-            FilesResource.ListRequest request = service.Files.List();
-
-            do
-            {
-                try
-                {
-                    FileList files = request.Execute();
-
-                    result.AddRange(files.Items);
-                    request.PageToken = files.NextPageToken;
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("An error occurred: " + e.Message);
-                    request.PageToken = null;
-                }
-            } while (!String.IsNullOrEmpty(request.PageToken));
-            return result;
-        }
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
@@ -324,6 +308,9 @@ namespace SyncMultipleGoogleDrives
                                         case "FileFilter":
                                             ga.FileFilter = oNodeChild.InnerText;
                                             break;
+                                        case "RootFolder":
+                                            ga.RootFolder = oNodeChild.InnerText;
+                                            break;
                                     }
                                 }
                             }
@@ -356,14 +343,14 @@ namespace SyncMultipleGoogleDrives
                                     if (ga.FileFilter == "*")
                                     {
                                         _forecolor = "Green";
-                                        ga.AddToList(item);
+                                        ga.AddToListToUpload(item);
                                     }
                                     else
                                     {
                                         if (item.Name.StartsWith(ga.FileFilter.Replace("*", "")))
                                         {
                                             _forecolor = "Green";
-                                            ga.AddToList(item);
+                                            ga.AddToListToUpload(item);
                                         }
                                     }
                                 }
@@ -380,14 +367,14 @@ namespace SyncMultipleGoogleDrives
                                 if (ga.FileFilter == "*")
                                 {
                                     _forecolor = "Green";
-                                    ga.AddToList(item);
+                                    ga.AddToListToUpload(item);
                                 }
                                 else
                                 {
-                                    if (pathminushome.Contains("\\" + ga.FileFilter.Replace("*", "")))
+                                    if (pathminushome.StartsWith("\\" + ga.FileFilter.Replace("*", "")))
                                     {
                                         _forecolor = "Green";
-                                        ga.AddToList(item);
+                                        ga.AddToListToUpload(item);
                                     }
                                 }
                             }
@@ -398,6 +385,50 @@ namespace SyncMultipleGoogleDrives
                     }
                 }
             }
+        }
+
+
+        private void btnSynch_Click(object sender, RoutedEventArgs e)
+        {
+            Thread newThread = new Thread(Synch);
+
+            // Use the overload of the Start method that has a 
+            // parameter of type Object. You can create an object that 
+            // contains several pieces of data, or you can pass any  
+            // reference type or value type. The following code passes 
+            // the integer value 42. 
+            //
+            newThread.IsBackground = true;
+            newThread.Start();
+        }
+
+        private void Synch()
+        {
+            foreach (GoogleAccount ga in _GoogleAccounts)
+            {
+                cs.CurrentAccount = ga.Name;
+                if (ga.ItemListOnGoogleDrive == null || ga.ItemListOnGoogleDrive.Count == 0)
+                {
+                    ga.FillItemListOnGoogleDrive();
+                }
+                if (ga.ItemListToUpload != null)
+                {
+                    foreach (Item i in ga.ItemListToUpload)
+                    {
+                        if (!i.IsFolder)
+                        {
+                            cs.CurrentFolder = i.Path;
+                            cs.CurrentFile = i.Name;
+                            for (int tel = 0; tel <= 100; tel++)
+                            {
+                                cs.CurrentFileUploadValue = tel;
+                                Thread.Sleep(50);
+                            }
+                        }
+                    }
+                }
+            }
+
         }
     }
 
