@@ -47,6 +47,8 @@ namespace SyncMultipleGoogleDrives
 
         private CurrentSynchro cs;
 
+        private static string _rootFolder = "";
+
         public MainWindow()
         {
             InitializeComponent();
@@ -68,7 +70,7 @@ namespace SyncMultipleGoogleDrives
             {
                 txtRootFolder.Text = Properties.Settings.Default.rootFolder;
             }
-
+            _rootFolder = txtRootFolder.Text;
 
             itemProvider = new ItemProvider();
             items = itemProvider.GetItems(txtRootFolder.Text);
@@ -83,7 +85,7 @@ namespace SyncMultipleGoogleDrives
 
         void txtRootFolder_TextChanged(object sender, TextChangedEventArgs e)
         {
-
+            _rootFolder = txtRootFolder.Text;
             var itemProvider = new ItemProvider();
 
             var items = itemProvider.GetItems(txtRootFolder.Text);
@@ -409,6 +411,8 @@ namespace SyncMultipleGoogleDrives
                 cs.CurrentAccount = ga.Name;
                 cs.TotalFileUploadValue = 0;
                 cs.CurrentFileUploadValue = 0;
+                cs.CurrentFile = "";
+                cs.CurrentFolder = "";
 
                 if (ga.ItemListOnGoogleDrive == null || ga.ItemListOnGoogleDrive.Count == 0)
                 {
@@ -421,15 +425,28 @@ namespace SyncMultipleGoogleDrives
                     foreach (Item i in ga.ItemListToUpload)
                     {
                         huidigtotaal += breuk;
+                        string abspath = i.Path.Substring(_rootFolder.Length);
+                        abspath = abspath.Substring(0, abspath.Length - i.Name.Length);
+                        if (abspath == "\\")
+                        {
+                            abspath = "";
+                        }
                         if (!i.IsFolder)
                         {
+                            
                             cs.CurrentFolder = i.Path;
                             cs.CurrentFile = i.Name;
-                            for (int tel = 0; tel <= 100; tel++)
-                            {
-                                cs.CurrentFileUploadValue = tel;
-                                Thread.Sleep(50);
-                            }
+
+                            ga.UploadFile(i.Path, i.Name, abspath );
+                            //for (int tel = 0; tel <= 100; tel++)
+                            //{
+                            //    cs.CurrentFileUploadValue = tel;
+                            //    Thread.Sleep(50);
+                            //}
+                        }
+                        else
+                        {
+                            ga.CreateFolder(i.Path, i.Name, abspath);
                         }
                         cs.TotalFileUploadValue = (int)huidigtotaal;
                     }
