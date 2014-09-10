@@ -14,6 +14,7 @@ namespace SyncMultipleGoogleDrives.Model
         public string Path { get; set; }
         public bool IsFolder { get; set; }
         public string GoogleID { get; set; }
+        public string GoogleParentID { get; set; }
 
         //private Color _ForeColor = (Color)ColorConverter.ConvertFromString("AliceBlue");
         //public Color ForeColor

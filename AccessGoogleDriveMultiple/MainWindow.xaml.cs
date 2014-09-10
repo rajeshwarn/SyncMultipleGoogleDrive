@@ -337,6 +337,7 @@ namespace SyncMultipleGoogleDrives
                     {
                         if (item.IsFolder)
                         {
+                            string pathminushome = item.Path.Replace(txtRootFolder.Text, "");
                             string _forecolor = "Gray";
                             if (!string.IsNullOrEmpty(item.Name))
                             {
@@ -349,7 +350,17 @@ namespace SyncMultipleGoogleDrives
                                     }
                                     else
                                     {
-                                        if (item.Name.StartsWith(ga.FileFilter.Replace("*", "")))
+                                        if (ga.FileFilter.EndsWith("*") && pathminushome.StartsWith(ga.FileFilter.Replace("*", "")))
+                                        {
+                                            _forecolor = "Green";
+                                            ga.AddToListToUpload(item);
+                                        }
+                                        else if (ga.FileFilter.StartsWith("*") && pathminushome.EndsWith(ga.FileFilter.Replace("*", "")))
+                                        {
+                                            _forecolor = "Green";
+                                            ga.AddToListToUpload(item);
+                                        }
+                                        else if (ga.FileFilter.Contains("*") && pathminushome.Contains(ga.FileFilter.Replace("*", "")))
                                         {
                                             _forecolor = "Green";
                                             ga.AddToListToUpload(item);
@@ -431,6 +442,14 @@ namespace SyncMultipleGoogleDrives
                         {
                             abspath = "";
                         }
+                        if (abspath.StartsWith("\\"))
+                        {
+                            abspath = abspath.Substring(1);
+                        }
+                        if (abspath.EndsWith("\\"))
+                        {
+                            abspath = abspath.Substring(0, abspath.Length - 1);
+                        }
                         if (!i.IsFolder)
                         {
                             
@@ -450,6 +469,7 @@ namespace SyncMultipleGoogleDrives
                         }
                         cs.TotalFileUploadValue = (int)huidigtotaal;
                     }
+                    cs.TotalFileUploadValue = 100;
                 }
             }
 

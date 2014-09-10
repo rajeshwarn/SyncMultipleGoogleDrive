@@ -69,6 +69,10 @@ namespace SyncMultipleGoogleDrives
         {
             _itemListOnGoogleDrive.Add(item);
         }
+        public void AddToListOnGoogleDrive(List<Item> items)
+        {
+            _itemListOnGoogleDrive.AddRange(items);
+        }
         public void ClearListOnGoogleDrive()
         {
             _itemListOnGoogleDrive.Clear();
@@ -132,31 +136,37 @@ namespace SyncMultipleGoogleDrives
 
                                 if (_foldStruct != null && _foldStruct.Count > 0)
                                 {
+                                    AddToListOnGoogleDrive(_foldStruct);
                                     foreach (Item fold in _foldStruct)
                                     {
-                                        System.Diagnostics.Trace.WriteLine(fold.Name + " : " + fold.Path);
+                                        List<Item> _foldItems = new List<Item>();
+                                        GetFolderItems(ref _foldItems, fold.GoogleID);
+                                        BrowseAllFiles(lstFile, ref _foldItems, fold.Path);
+                                        AddToListOnGoogleDrive(_foldItems);
                                     }
+                                }
+
+                                if (_itemListOnGoogleDrive != null && _itemListOnGoogleDrive.Count > 0)
+                                {
+
+                                    foreach (Item itm in _itemListOnGoogleDrive)
+                                    {
+                                        if (itm.IsFolder)
+                                        {
+                                            Trace.WriteLine("Folder ID:" + itm.GoogleID + ";ParentID:" + itm.GoogleParentID + ";Path:" + itm.Path, "DEVINFO FillItemListOnGoogleDrive");
+                                        }
+                                        else
+                                        {
+                                            Trace.WriteLine("File ID:" + itm.GoogleID + ";ParentID:" + itm.GoogleParentID + ";Path:" + itm.Path, "DEVINFO FillItemListOnGoogleDrive");
+                                        }
+
+                                    }
+
                                 }
 
                             }
                         }
 
-                        //foreach (File f in lstFile)
-                        //{
-                        //    if (f.MimeType.EndsWith("apps.folder"))
-                        //    {
-                        //        System.Diagnostics.Trace.WriteLine(f.Title);
-                        //        System.Diagnostics.Trace.WriteLine(f.Parents )
-                        //    }
-                        //    else if (f.Title.Contains("pellikaan"))
-                        //    {
-                        //        System.Diagnostics.Trace.WriteLine(f.Title);
-                        //    }
-                        //    else
-                        //    {
-                        //        System.Diagnostics.Trace.WriteLine(f.Title);
-                        //    }
-                        //}
                     }
                 }
             }
@@ -180,11 +190,61 @@ namespace SyncMultipleGoogleDrives
                 {
                     Item itm = new Item();
                     itm.GoogleID = fold.Id;
+                    itm.GoogleParentID = rootid;
                     itm.IsFolder = true;
                     lstItems.Add(itm);
                     GetFolderStructure(ref lstItems, fold.Id);
                 }
 
+            }
+        }
+
+        private void GetFolderItems(ref List<Item> lstItems, string rootid)
+        {
+            //ChildList listadoFiles = service.Children.List(rootid).Execute();
+            //Q = "mimeType='application/vnd.google-apps.folder'
+
+            ChildrenResource.ListRequest request = service.Children.List(rootid);
+            request.Q = "mimeType != 'application/vnd.google-apps.folder'";
+            ChildList listadoFiles = request.Execute();
+
+
+            if (listadoFiles != null && listadoFiles.Items.Count > 0)
+            {
+                foreach (ChildReference fold in listadoFiles.Items)
+                {
+                    Item itm = new Item();
+                    itm.GoogleID = fold.Id;
+                    itm.GoogleParentID = rootid;
+                    itm.IsFolder = false;
+                    lstItems.Add(itm);
+                }
+
+            }
+        }
+
+        private void BrowseAllFiles(List<File> lstFiles, ref List<Item> lstFileIds, string rootFolder)
+        {
+            if (lstFiles != null && lstFiles.Count > 0)
+            {
+                if (lstFileIds != null && lstFileIds.Count > 0)
+                {
+                    for (int i = 0; i < lstFileIds.Count; i++)
+                    {
+                        for (int j = 0; j < lstFiles.Count; j++)
+                        {
+                            if (lstFileIds[i].GoogleID == lstFiles[j].Id)
+                            {
+                                if (string.IsNullOrEmpty(lstFileIds[i].Name))
+                                {
+                                    lstFileIds[i].Name = lstFiles[j].Title;
+                                    lstFileIds[i].Path = rootFolder + "\\" + lstFiles[j].Title;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -200,7 +260,9 @@ namespace SyncMultipleGoogleDrives
                     {
                         for (int j = 0; j < lstFolders.Count; j++)
                         {
-                            if (foldStruct[i].GoogleID == lstFolders[j].Id)
+                            if (lstFolders[j].Parents != null && lstFolders[j].Parents.Count > 0 && 
+                                lstFolders[j].Parents[0].Id == rootID && 
+                                foldStruct[i].GoogleID == lstFolders[j].Id)
                             {
                                 if (string.IsNullOrEmpty(foldStruct[i].Name))
                                 {
@@ -267,17 +329,138 @@ namespace SyncMultipleGoogleDrives
 
         public void CreateFolder(string FullPath, string Name, string RelativePath)
         {
-            Trace.WriteLine("FullPath:" + FullPath, "DEVINFO GoogleAccount.CreateFolder");
-            Trace.WriteLine("Name:" + Name, "DEVINFO GoogleAccount.CreateFolder");
-            Trace.WriteLine("RelativePath:" + RelativePath, "DEVINFO GoogleAccount.CreateFolder");
+            if (credential == null)
+            {
+                SetCredential();
+            }
+            if (credential != null)
+            {
+                if (service == null)
+                {
+                    SetService();
+                }
+                if (service != null)
+                {
 
+                    if (!FolderExists(FullPath, Name, RelativePath))
+                    {
+                        File body = new File();
+                        body.Title = Name;
+                        body.Description = Name;
+                        body.MimeType = "application/vnd.google-apps.folder";
+                        string parent = GetParentId(RelativePath);
+                        if (!string.IsNullOrEmpty(parent))
+                        {
+                            body.Parents = new List<ParentReference>() { new ParentReference() { Id = parent } };
+                        }
+
+                        try
+                        {
+
+
+                            FilesResource.InsertRequest request = service.Files.Insert(body);
+                            File file = request.Execute();
+                            Item newFold = new Item();
+                            newFold.Name = Name;
+                            newFold.IsFolder = true;
+                            if (!string.IsNullOrEmpty(RelativePath))
+                            {
+                                newFold.Path = RootFolder + "\\" + RelativePath + "\\" + Name;
+                            }
+                            else
+                            {
+                                newFold.Path = RootFolder + "\\" + Name;
+                            }
+                            newFold.GoogleID = file.Id;
+                            newFold.GoogleParentID = parent;
+                            AddToListOnGoogleDrive(newFold);
+
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("An error occurred: " + e.Message);
+                        }
+                    }
+
+                }
+            }
+
+
+
+
+        }
+
+        public bool FolderExists(string FullPath, string Name, string RelativePath)
+        {
+            bool _return = false;
+
+            if (_itemListOnGoogleDrive != null && _itemListOnGoogleDrive.Count > 0)
+            {
+                Item folder = null;
+                if (string.IsNullOrEmpty(RelativePath))
+                {
+                    folder = _itemListOnGoogleDrive.FirstOrDefault(f => f.Path == RootFolder + "\\" + Name && f.Name == Name && f.IsFolder == true);
+                }
+                else
+                {
+                    folder = _itemListOnGoogleDrive.FirstOrDefault(f => f.Path == RootFolder + "\\" + RelativePath + "\\" + Name && f.Name == Name && f.IsFolder == true);
+                }
+                if (folder != null)
+                {
+                    _return = true;
+                }
+            }
+
+            return _return;
+        }
+
+        public bool FileExists(string FullPath, string Name, string RelativePath)
+        {
+            bool _return = false;
+
+            if (_itemListOnGoogleDrive != null && _itemListOnGoogleDrive.Count > 0)
+            {
+                Item file = _itemListOnGoogleDrive.FirstOrDefault(f => f.Path == RootFolder + "\\" + RelativePath + "\\" + Name && f.Name == Name && f.IsFolder == false);
+                if (file != null)
+                {
+                    _return = true;
+                }
+            }
+
+            return _return;
+        }
+
+        private string GetParentId(string RelativePath)
+        {
+            string _return = "";
+
+            if (_itemListOnGoogleDrive != null && _itemListOnGoogleDrive.Count > 0)
+            {
+                Item file = null;
+                if (string.IsNullOrEmpty(RelativePath))
+                {
+                    file = _itemListOnGoogleDrive.FirstOrDefault(f => f.Path == RootFolder && f.IsFolder == true);
+                }
+                else
+                {
+                    file = _itemListOnGoogleDrive.FirstOrDefault(f => f.Path == RootFolder + "\\" + RelativePath && f.IsFolder == true);
+                }
+                if (file != null)
+                {
+                    _return = file.GoogleID;
+                }
+            }
+            if (string.IsNullOrEmpty(_return))
+            {
+                _return = RootFolderID;
+            }
+
+
+            return _return;
         }
 
         public void UploadFile(string FullPath, string Name, string RelativePath)
         {
-            Trace.WriteLine("FullPath:" + FullPath, "DEVINFO GoogleAccount.UploadFile");
-            Trace.WriteLine("Name:" + Name, "DEVINFO GoogleAccount.UploadFile");
-            Trace.WriteLine("RelativePath:" + RelativePath, "DEVINFO GoogleAccount.UploadFile");
 
             if (credential == null)
             {
@@ -292,22 +475,61 @@ namespace SyncMultipleGoogleDrives
                 if (service != null)
                 {
 
-                    File body = new File();
-                    body.Title = Name;
-                    body.Description = Name;
-                    string mimetype = GetMIMEType(FullPath);
-                    if (mimetype != "unknown/unknown")
+                    if (!FileExists(FullPath, Name, RelativePath))
                     {
-                        body.MimeType = mimetype;
-                        byte[] byteArray = System.IO.File.ReadAllBytes(FullPath);
-                        System.IO.MemoryStream stream = new System.IO.MemoryStream(byteArray);
 
-                        FilesResource.InsertMediaUpload request = service.Files.Insert(body, stream, "text/plain");
-                        request.Upload();
+                        File body = new File();
+                        body.Title = Name;
+                        body.Description = Name;
+                        string parent = GetParentId(RelativePath);
+                        if (!string.IsNullOrEmpty(parent))
+                        {
+                            body.Parents = new List<ParentReference>() { new ParentReference() { Id = parent } };
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrEmpty(RootFolderID))
+                            {
+                                body.Parents = new List<ParentReference>() { new ParentReference() { Id = parent } };
+                            }
+                        }
+                        string mimetype = GetMIMEType(FullPath);
+                        if (mimetype != "unknown/unknown")
+                        {
+                            Trace.WriteLine("FullPath:" + FullPath, "DEVINFO GoogleAccount.UploadFile");
+                            Trace.WriteLine("Name:" + Name, "DEVINFO GoogleAccount.UploadFile");
+                            Trace.WriteLine("RelativePath:" + RelativePath, "DEVINFO GoogleAccount.UploadFile");
 
-                        File file = request.ResponseBody;
-                        Trace.WriteLine("File id: " + file.Id);
+                            body.MimeType = mimetype;
+                            byte[] byteArray = System.IO.File.ReadAllBytes(FullPath);
+                            System.IO.MemoryStream stream = new System.IO.MemoryStream(byteArray);
+
+                            FilesResource.InsertMediaUpload request = service.Files.Insert(body, stream, "text/plain");
+                            request.Upload();
+
+                            File file = request.ResponseBody;
+
+                            Item newFile = new Item();
+                            newFile.Name = Name;
+                            newFile.IsFolder = false;
+                            if (!string.IsNullOrEmpty(RelativePath))
+                            {
+                                newFile.Path = RootFolder + "\\" + RelativePath + "\\" + Name;
+                            }
+                            else
+                            {
+                                newFile.Path = RootFolder + "\\" + Name;
+                            }
+                            newFile.GoogleID = file.Id;
+                            newFile.GoogleParentID = parent;
+                            AddToListOnGoogleDrive(newFile);
+                            Trace.WriteLine("File id: " + file.Id, "DEVINFO GoogleAccount.UploadFile");
+                        }
+
+
+
                     }
+
 
 
 

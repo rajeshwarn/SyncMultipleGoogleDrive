@@ -47,14 +47,18 @@ namespace SyncMultipleGoogleDrives.Binding
             {
                 foreach (var file in dirInfo.GetFiles())
                 {
-                    var item = new FileItem
+                    if (file.Name.ToLower() != "thumbs.db" && file.Name.ToLower() != "desktop.ini")
                     {
-                        Name = file.Name,
-                        Path = file.FullName,
-                        IsFolder = false
-                    };
+                        var item = new FileItem
+                        {
+                            Name = file.Name,
+                            Path = file.FullName,
+                            IsFolder = false
+                        };
 
-                    items.Add(item);
+                        items.Add(item);
+
+                    }
                 }
 
             }
