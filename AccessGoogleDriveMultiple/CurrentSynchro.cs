@@ -66,6 +66,19 @@ namespace SyncMultipleGoogleDrives
             }
         }
 
+        private int _TotalFileUploadValue;
+        public int TotalFileUploadValue
+        {
+            get
+            {
+                return _TotalFileUploadValue;
+            }
+            set
+            {
+                _TotalFileUploadValue = value;
+                NotifyPropertyChanged();
+            }
+        }
 
 
         public event PropertyChangedEventHandler PropertyChanged;

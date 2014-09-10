@@ -407,14 +407,20 @@ namespace SyncMultipleGoogleDrives
             foreach (GoogleAccount ga in _GoogleAccounts)
             {
                 cs.CurrentAccount = ga.Name;
+                cs.TotalFileUploadValue = 0;
+                cs.CurrentFileUploadValue = 0;
+
                 if (ga.ItemListOnGoogleDrive == null || ga.ItemListOnGoogleDrive.Count == 0)
                 {
                     ga.FillItemListOnGoogleDrive();
                 }
-                if (ga.ItemListToUpload != null)
+                if (ga.ItemListToUpload != null && ga.ItemListToUpload.Count > 0)
                 {
+                    double breuk = 100 / (double)ga.ItemListToUpload.Count ;
+                    double huidigtotaal = 0.0;
                     foreach (Item i in ga.ItemListToUpload)
                     {
+                        huidigtotaal += breuk;
                         if (!i.IsFolder)
                         {
                             cs.CurrentFolder = i.Path;
@@ -425,6 +431,7 @@ namespace SyncMultipleGoogleDrives
                                 Thread.Sleep(50);
                             }
                         }
+                        cs.TotalFileUploadValue = (int)huidigtotaal;
                     }
                 }
             }

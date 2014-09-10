@@ -139,13 +139,18 @@ namespace SyncMultipleGoogleDrives
                             }
                             if (nodeToUpdate != null)
                             {
-                                UpdateNode(ref nodeToUpdate, Name, Email, ClientId, ClientSecret, FileDataStore, FileFilter);
+                                UpdateNode(ref nodeToUpdate, Name, Email, ClientId, ClientSecret, FileDataStore, FileFilter, RootFolder);
                             }
                             else
                             {
                                 AddNode(Name, Email, ClientId, ClientSecret, FileDataStore, FileFilter, RootFolder);
                             }
                         }
+                        else
+                        {
+                            AddNode(Name, Email, ClientId, ClientSecret, FileDataStore, FileFilter, RootFolder);
+                        }
+
                     }
                 }
 
@@ -154,7 +159,7 @@ namespace SyncMultipleGoogleDrives
 
         }
 
-        private void UpdateNode(ref XmlNode nodeToUpdate, string Name, string Email, string ClientId, string ClientSecret, string FileDataStore, string FileFilter)
+        private void UpdateNode(ref XmlNode nodeToUpdate, string Name, string Email, string ClientId, string ClientSecret, string FileDataStore, string FileFilter, string RootFolder)
         {
             XmlNodeList lstNodesPerAccount = nodeToUpdate.ChildNodes;
             if (lstNodesPerAccount != null && lstNodesPerAccount.Count > 0)
@@ -180,6 +185,9 @@ namespace SyncMultipleGoogleDrives
                             break;
                         case "FileFilter":
                             oNodeChild.InnerText = FileFilter;
+                            break;
+                        case "RootFolder":
+                            oNodeChild.InnerText = RootFolder;
                             break;
                     }
                 }
@@ -219,6 +227,7 @@ namespace SyncMultipleGoogleDrives
                 accountNode.AppendChild(clientsecretNode);
                 accountNode.AppendChild(filedatastoreNode);
                 accountNode.AppendChild(filefilterNode);
+                accountNode.AppendChild(rootfolderNode);
 
                 rootNode.AppendChild(accountNode);
 
