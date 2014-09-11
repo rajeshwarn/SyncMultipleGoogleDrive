@@ -25,15 +25,15 @@
         <Button Content="Button" HorizontalAlignment="Left" Margin="432,31,0,0" VerticalAlignment="Top" Width="75" Height="23" Click="Button_Click_1"/>
 
         <TreeView x:Name="tvFilesFolders" ItemsSource="{Binding}" Margin="10,59,10,186" />
-        <Button x:Name="btnSynch" Content="Synchronize" HorizontalAlignment="Left" Margin="10,301,0,0" VerticalAlignment="Top" Width="75" Click="btnSynch_Click"/>
-        <Label Content="Current Account" HorizontalAlignment="Left" Margin="10,326,0,0" VerticalAlignment="Top" Width="100"/>
-        <Label Content="Current folder" HorizontalAlignment="Left" Margin="10,357,0,0" VerticalAlignment="Top" Width="100"/>
-        <Label Content="Current file" HorizontalAlignment="Left" Margin="10,388,0,0" VerticalAlignment="Top" Width="100"/>
-        <ProgressBar HorizontalAlignment="Left" Height="23" Margin="10,419,0,0" VerticalAlignment="Top" Width="497" Value="{Binding Path=CurrentFileUploadValue, UpdateSourceTrigger=PropertyChanged}"/>
-        <ProgressBar HorizontalAlignment="Left" Height="23" Margin="10,449,0,0" VerticalAlignment="Top" Width="497" Value="{Binding Path=TotalFileUploadValue, UpdateSourceTrigger=PropertyChanged}"/>
-        <Label x:Name="lblCurrentAccount" Content="{Binding Path=CurrentAccount, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="115,326,0,0" VerticalAlignment="Top" Width="392"/>
-        <Label x:Name="lblCurrentFile" Content="{Binding Path=CurrentFile, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="115,388,0,0" VerticalAlignment="Top" Width="392"/>
-        <Label x:Name="lblCurrentFolder" Content="{Binding Path=CurrentFolder, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="115,357,0,0" VerticalAlignment="Top" Width="392"/>
+        <Button x:Name="btnSynch" Content="Synchronize" Margin="10,0,0,161" Click="btnSynch_Click" HorizontalAlignment="Left" Width="75" Height="20" VerticalAlignment="Bottom"/>
+        <Label Content="Current Account" HorizontalAlignment="Left" Margin="10,0,0,130" Width="100" Height="26" VerticalAlignment="Bottom"/>
+        <Label Content="Current folder" HorizontalAlignment="Left" Margin="10,0,0,99" Width="100" Height="26" VerticalAlignment="Bottom"/>
+        <Label Content="Current file" HorizontalAlignment="Left" Margin="10,0,0,68" Width="100" Height="26" VerticalAlignment="Bottom"/>
+        <ProgressBar Margin="10,0,10,40" Value="{Binding Path=CurrentFileUploadValue, UpdateSourceTrigger=PropertyChanged}" Height="23" VerticalAlignment="Bottom"/>
+        <ProgressBar Margin="10,0,10,10" Value="{Binding Path=TotalFileUploadValue, UpdateSourceTrigger=PropertyChanged}" Height="23" VerticalAlignment="Bottom"/>
+        <Label x:Name="lblCurrentAccount" Content="{Binding Path=CurrentAccount, UpdateSourceTrigger=PropertyChanged}" Margin="115,0,10,130" Height="26" VerticalAlignment="Bottom"/>
+        <Label x:Name="lblCurrentFile" Content="{Binding Path=CurrentFile, UpdateSourceTrigger=PropertyChanged}" Margin="115,0,10,68" Height="26" VerticalAlignment="Bottom"/>
+        <Label x:Name="lblCurrentFolder" Content="{Binding Path=CurrentFolder, UpdateSourceTrigger=PropertyChanged}" Margin="115,0,10,99" Height="26" VerticalAlignment="Bottom"/>
 
     </Grid>
 </Window>

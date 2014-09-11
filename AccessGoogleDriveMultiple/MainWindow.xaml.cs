@@ -415,10 +415,20 @@ namespace SyncMultipleGoogleDrives
             newThread.Start();
         }
 
+        private GoogleAccount _currentGA = null;
         private void Synch()
         {
             foreach (GoogleAccount ga in _GoogleAccounts)
             {
+                _currentGA = ga;
+                ga.UploadBusy -= ga_UploadBusy;
+                ga.UploadEnd -= ga_UploadEnd;
+                ga.UploadStart -= ga_UploadStart;
+
+                ga.UploadBusy += ga_UploadBusy;
+                ga.UploadEnd += ga_UploadEnd;
+                ga.UploadStart += ga_UploadStart;
+
                 cs.CurrentAccount = ga.Name;
                 cs.TotalFileUploadValue = 0;
                 cs.CurrentFileUploadValue = 0;
@@ -427,11 +437,12 @@ namespace SyncMultipleGoogleDrives
 
                 if (ga.ItemListOnGoogleDrive == null || ga.ItemListOnGoogleDrive.Count == 0)
                 {
-                    ga.FillItemListOnGoogleDrive();
+                    //ga.FillItemListOnGoogleDrive();
+                    ga.FillItemListOnGoogleDriveNew();
                 }
                 if (ga.ItemListToUpload != null && ga.ItemListToUpload.Count > 0)
                 {
-                    double breuk = 100 / (double)ga.ItemListToUpload.Count ;
+                    double breuk = 100 / (double)ga.ItemListToUpload.Count;
                     double huidigtotaal = 0.0;
                     foreach (Item i in ga.ItemListToUpload)
                     {
@@ -452,11 +463,10 @@ namespace SyncMultipleGoogleDrives
                         }
                         if (!i.IsFolder)
                         {
-                            
-                            cs.CurrentFolder = i.Path;
+
                             cs.CurrentFile = i.Name;
 
-                            ga.UploadFile(i.Path, i.Name, abspath );
+                            ga.UploadFile(i.Path, i.Name, abspath);
                             //for (int tel = 0; tel <= 100; tel++)
                             //{
                             //    cs.CurrentFileUploadValue = tel;
@@ -465,12 +475,34 @@ namespace SyncMultipleGoogleDrives
                         }
                         else
                         {
+                            cs.CurrentFolder = i.Path;
                             ga.CreateFolder(i.Path, i.Name, abspath);
+                            Thread.Sleep(50);
                         }
+                        cs.CurrentFileUploadValue = 0;
                         cs.TotalFileUploadValue = (int)huidigtotaal;
                     }
                     cs.TotalFileUploadValue = 100;
                 }
+            }
+
+        }
+
+        void ga_UploadStart(object sender, EventArgs e)
+        {
+            cs.CurrentFileUploadValue = 0;
+        }
+
+        void ga_UploadEnd(object sender, EventArgs e)
+        {
+            cs.CurrentFileUploadValue = 100;
+        }
+
+        void ga_UploadBusy(object sender, EventArgs e)
+        {
+            if (_currentGA != null)
+            {
+                cs.CurrentFileUploadValue = _currentGA.ProgressValue;
             }
 
         }

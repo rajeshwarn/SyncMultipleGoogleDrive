@@ -79,6 +79,122 @@ namespace SyncMultipleGoogleDrives
         }
 
 
+        public void FillItemListOnGoogleDriveNew()
+        {
+            if (credential == null)
+            {
+                SetCredential();
+            }
+            if (credential != null)
+            {
+                if (service == null)
+                {
+                    SetService();
+                }
+                if (service != null)
+                {
+                    List<File> lstFile = retrieveAllFiles(service);
+                    if (lstFile != null && lstFile.Count > 0)
+                    {
+
+                        List<File> lstFolders = lstFile.FindAll(m => m.MimeType.EndsWith("apps.folder"));
+                        if (lstFolders != null)
+                        {
+                            // Determine RootFolderID
+                            if (string.IsNullOrEmpty(RootFolderID))
+                            {
+                                foreach (File fold in lstFolders)
+                                {
+                                    if (fold.Title.ToLower() == RootFolder.ToLower())
+                                    {
+                                        RootFolderID = fold.Id;
+                                        Item item = new Item();
+                                        item.IsFolder = true;
+                                        item.Name = fold.Title;
+                                        item.Path = fold.Title;
+                                        item.GoogleID = fold.Id;
+
+                                        _itemListOnGoogleDrive.Add(item);
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(RootFolderID))
+                            {
+                                GetAllFoldersUnderRootFolder(lstFolders, RootFolderID, RootFolder);
+                            }
+                            if (_itemListOnGoogleDrive != null && _itemListOnGoogleDrive.Count > 0)
+                            {
+                                List<Item> newList = _itemListOnGoogleDrive.ToList();
+                                GetAllFilesUnderFolder(lstFile, newList);
+                            }
+
+
+
+
+                        }
+
+
+
+                    }
+                }
+            }
+
+        }
+
+        private void GetAllFilesUnderFolder(List<File> lstFiles, List<Item> lstFolders)
+        {
+            if (lstFiles != null && lstFiles.Count > 0)
+            {
+                if (lstFolders != null && lstFolders.Count > 0)
+                {
+                    foreach (Item folder in lstFolders)
+                    {
+                        List<File> lstFilesOnderFolder = lstFiles.FindAll(m => !m.MimeType.EndsWith("apps.folder") && m.Parents != null && m.Parents.Count > 0 && m.Parents[0].Id == folder.GoogleID);
+                        if (lstFilesOnderFolder != null && lstFilesOnderFolder.Count > 0)
+                        {
+                            foreach (File file in lstFilesOnderFolder)
+                            {
+                                Item item = new Item();
+                                item.IsFolder = false;
+                                item.Name = file.Title;
+                                item.Path = folder.Path + "\\" + file.Title;
+                                item.GoogleID = file.Id;
+                                item.GoogleParentID = folder.GoogleID;
+                                _itemListOnGoogleDrive.Add(item);
+                            }
+
+                        }
+
+
+                    }
+
+                }
+            }
+        }
+
+        private void GetAllFoldersUnderRootFolder(List<File> lstFolders, string parentid, string parentname)
+        {
+            List<File> lstFoldersOnderRoot = lstFolders.FindAll(m => m.Parents != null && m.Parents.Count > 0 && m.Parents[0].Id == parentid);
+            if (lstFoldersOnderRoot != null && lstFoldersOnderRoot.Count > 0)
+            {
+                foreach (File fold in lstFoldersOnderRoot)
+                {
+                    Item item = new Item();
+                    item.IsFolder = true;
+                    item.Name = fold.Title;
+                    item.Path = parentname + "\\" + fold.Title;
+                    item.GoogleID = fold.Id;
+                    item.GoogleParentID = parentid;
+                    _itemListOnGoogleDrive.Add(item);
+                    GetAllFoldersUnderRootFolder(lstFolders, fold.Id, item.Path);
+                }
+            }
+
+        }
+
+
         public void FillItemListOnGoogleDrive()
         {
 
@@ -260,8 +376,8 @@ namespace SyncMultipleGoogleDrives
                     {
                         for (int j = 0; j < lstFolders.Count; j++)
                         {
-                            if (lstFolders[j].Parents != null && lstFolders[j].Parents.Count > 0 && 
-                                lstFolders[j].Parents[0].Id == rootID && 
+                            if (lstFolders[j].Parents != null && lstFolders[j].Parents.Count > 0 &&
+                                lstFolders[j].Parents[0].Id == rootID &&
                                 foldStruct[i].GoogleID == lstFolders[j].Id)
                             {
                                 if (string.IsNullOrEmpty(foldStruct[i].Name))
@@ -304,10 +420,14 @@ namespace SyncMultipleGoogleDrives
         }
 
 
-        public static List<Google.Apis.Drive.v2.Data.File> retrieveAllFiles(DriveService service)
+        public static List<Google.Apis.Drive.v2.Data.File> retrieveAllFiles(DriveService service, bool IncludingTrashed = false)
         {
             List<Google.Apis.Drive.v2.Data.File> result = new List<Google.Apis.Drive.v2.Data.File>();
             FilesResource.ListRequest request = service.Files.List();
+            if (!IncludingTrashed)
+            {
+                request.Q = "trashed=false";
+            }
 
             do
             {
@@ -502,9 +622,11 @@ namespace SyncMultipleGoogleDrives
 
                             body.MimeType = mimetype;
                             byte[] byteArray = System.IO.File.ReadAllBytes(FullPath);
+                            _bytesToUpload = byteArray.Length;
                             System.IO.MemoryStream stream = new System.IO.MemoryStream(byteArray);
 
                             FilesResource.InsertMediaUpload request = service.Files.Insert(body, stream, "text/plain");
+                            request.ProgressChanged += request_ProgressChanged;
                             request.Upload();
 
                             File file = request.ResponseBody;
@@ -536,6 +658,73 @@ namespace SyncMultipleGoogleDrives
                 }
             }
 
+
+        }
+
+        private static double _bytesToUpload = 0;
+        private static double _bytesUploaded = 0;
+
+        public int ProgressValue
+        {
+            get
+            {
+                if (_bytesToUpload != 0)
+                {
+                    return (int)(_bytesUploaded / _bytesToUpload * 100); 
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public event EventHandler UploadStart;
+        public event EventHandler UploadEnd;
+        public event EventHandler UploadBusy;
+
+        protected virtual void OnUploadStart()
+        {
+            EventHandler handler = UploadStart;
+            if (handler != null)
+            {
+                handler(this, null);
+            }
+        }
+        protected virtual void OnUploadEnd()
+        {
+            EventHandler handler = UploadEnd;
+            if (handler != null)
+            {
+                handler(this, null);
+            }
+        }
+        protected virtual void OnUploadBusy()
+        {
+            EventHandler handler = UploadBusy;
+            if (handler != null)
+            {
+                handler(this, null);
+            }
+        }
+
+        void request_ProgressChanged(Google.Apis.Upload.IUploadProgress obj)
+        {
+            switch (obj.Status)
+            {
+                case Google.Apis.Upload.UploadStatus.Starting:
+                    OnUploadStart();
+                    break;
+                case Google.Apis.Upload.UploadStatus.Uploading:
+                    _bytesUploaded = obj.BytesSent;
+                    OnUploadBusy();
+                    break;
+                case Google.Apis.Upload.UploadStatus.Completed:
+                    OnUploadEnd();
+                    break;
+            }
+
+            //Trace.WriteLine( obj.Status.ToString() );
 
         }
 
