@@ -34,6 +34,7 @@
         <Label x:Name="lblCurrentAccount" Content="{Binding Path=CurrentAccount, UpdateSourceTrigger=PropertyChanged}" Margin="115,0,10,130" Height="26" VerticalAlignment="Bottom"/>
         <Label x:Name="lblCurrentFile" Content="{Binding Path=CurrentFile, UpdateSourceTrigger=PropertyChanged}" Margin="115,0,10,68" Height="26" VerticalAlignment="Bottom"/>
         <Label x:Name="lblCurrentFolder" Content="{Binding Path=CurrentFolder, UpdateSourceTrigger=PropertyChanged}" Margin="115,0,10,99" Height="26" VerticalAlignment="Bottom"/>
+        <Button x:Name="btnSynch_With_Log" Content="Synchronize with log" Margin="99,0,0,161" Click="btnSynch_WithLog_Click" HorizontalAlignment="Left" Width="159" Height="20" VerticalAlignment="Bottom"/>
 
     </Grid>
 </Window>

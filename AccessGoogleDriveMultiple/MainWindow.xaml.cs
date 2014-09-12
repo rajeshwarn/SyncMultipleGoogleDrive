@@ -415,7 +415,24 @@ namespace SyncMultipleGoogleDrives
             newThread.Start();
         }
 
+        private void btnSynch_WithLog_Click(object sender, RoutedEventArgs e)
+        {
+            Thread newThread = new Thread(SynchWithLogging);
+
+            // Use the overload of the Start method that has a 
+            // parameter of type Object. You can create an object that 
+            // contains several pieces of data, or you can pass any  
+            // reference type or value type. The following code passes 
+            // the integer value 42. 
+            //
+            newThread.SetApartmentState(ApartmentState.STA);
+            newThread.IsBackground = true;
+            newThread.Start();
+        }
+        
+
         private GoogleAccount _currentGA = null;
+
         private void Synch()
         {
             foreach (GoogleAccount ga in _GoogleAccounts)
@@ -485,6 +502,52 @@ namespace SyncMultipleGoogleDrives
                     cs.TotalFileUploadValue = 100;
                 }
             }
+
+        }
+
+        private void SynchWithLogging()
+        {
+            foreach (GoogleAccount ga in _GoogleAccounts)
+            {
+                _currentGA = ga;
+                ga.UploadBusy -= ga_UploadBusy;
+                ga.UploadEnd -= ga_UploadEnd;
+                ga.UploadStart -= ga_UploadStart;
+
+                ga.UploadBusy += ga_UploadBusy;
+                ga.UploadEnd += ga_UploadEnd;
+                ga.UploadStart += ga_UploadStart;
+
+                cs.CurrentAccount = ga.Name;
+                cs.TotalFileUploadValue = 0;
+                cs.CurrentFileUploadValue = 0;
+                cs.CurrentFile = "";
+                cs.CurrentFolder = "";
+
+                if (ga.ItemListOnGoogleDrive == null || ga.ItemListOnGoogleDrive.Count == 0)
+                {
+                    //ga.FillItemListOnGoogleDrive();
+                    ga.FillItemListOnGoogleDriveNew();
+                }
+                if (ga.ItemListToUpload != null && ga.ItemListToUpload.Count > 0)
+                {
+
+                    List<Item> lstItemsToUpload = ga.GetListOfItemsToUpload(ga.ItemListToUpload, _rootFolder);
+                    if (lstItemsToUpload != null && lstItemsToUpload.Count > 0)
+                    {
+                        ga.UploadItems = lstItemsToUpload;
+                    }
+
+
+
+
+                }
+            }
+            UploadWindow wind = new UploadWindow();
+            wind.Show();
+            wind.SetItems(_GoogleAccounts, _rootFolder);
+            System.Windows.Threading.Dispatcher.Run();
+
 
         }
 

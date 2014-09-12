@@ -14,7 +14,7 @@ using System.Diagnostics;
 
 namespace SyncMultipleGoogleDrives
 {
-    class GoogleAccount
+    public class GoogleAccount
     {
 
         UserCredential credential;
@@ -464,6 +464,7 @@ namespace SyncMultipleGoogleDrives
 
                     if (!FolderExists(FullPath, Name, RelativePath))
                     {
+                        _CurrentGoogleID = "";
                         File body = new File();
                         body.Title = Name;
                         body.Description = Name;
@@ -494,7 +495,7 @@ namespace SyncMultipleGoogleDrives
                             newFold.GoogleID = file.Id;
                             newFold.GoogleParentID = parent;
                             AddToListOnGoogleDrive(newFold);
-
+                            _CurrentGoogleID = file.Id;
                         }
                         catch (Exception e)
                         {
@@ -508,6 +509,13 @@ namespace SyncMultipleGoogleDrives
 
 
 
+        }
+
+        private List<Item> _UploadItems;
+        public List<Item> UploadItems
+        {
+            get { return _UploadItems; }
+            set { _UploadItems = value;  }
         }
 
         public bool FolderExists(string FullPath, string Name, string RelativePath)
@@ -579,6 +587,15 @@ namespace SyncMultipleGoogleDrives
             return _return;
         }
 
+        private string _CurrentGoogleID;
+        public string CurrentGoogleID
+        {
+            get
+            {
+                return _CurrentGoogleID;
+            }
+        }
+
         public void UploadFile(string FullPath, string Name, string RelativePath)
         {
 
@@ -597,7 +614,7 @@ namespace SyncMultipleGoogleDrives
 
                     if (!FileExists(FullPath, Name, RelativePath))
                     {
-
+                        _CurrentGoogleID = "";
                         File body = new File();
                         body.Title = Name;
                         body.Description = Name;
@@ -645,6 +662,7 @@ namespace SyncMultipleGoogleDrives
                             newFile.GoogleID = file.Id;
                             newFile.GoogleParentID = parent;
                             AddToListOnGoogleDrive(newFile);
+                            _CurrentGoogleID = file.Id;
                             Trace.WriteLine("File id: " + file.Id, "DEVINFO GoogleAccount.UploadFile");
                         }
 
@@ -726,6 +744,53 @@ namespace SyncMultipleGoogleDrives
 
             //Trace.WriteLine( obj.Status.ToString() );
 
+        }
+
+        public List<Item> GetListOfItemsToUpload(List<Item> lstLocalFiles, string RootFolder)
+        {
+            List<Item> lstReturn = new List<Item>();
+
+            List<Item> newList = lstLocalFiles.ToList();
+            newList.Sort();
+
+            foreach (Item item in newList)
+            {
+                string abspath = item.Path.Substring(RootFolder.Length);
+                abspath = abspath.Substring(0, abspath.Length - item.Name.Length);
+                if (abspath == "\\")
+                {
+                    abspath = "";
+                }
+                if (abspath.StartsWith("\\"))
+                {
+                    abspath = abspath.Substring(1);
+                }
+                if (abspath.EndsWith("\\"))
+                {
+                    abspath = abspath.Substring(0, abspath.Length - 1);
+                }
+                if (item.IsFolder)
+                {
+                    if (!FolderExists(item.Path, item.Name, abspath))
+                    {
+                        item.GoogleAccount = this.Name;
+                        lstReturn.Add(item);
+                    }
+                }
+                else
+                {
+                    if (!FileExists(item.Path, item.Name, abspath))
+                    {
+                        item.GoogleAccount = this.Name;
+                        lstReturn.Add(item);
+                    }
+                }
+            }
+
+
+
+            return lstReturn;
+            
         }
 
 
