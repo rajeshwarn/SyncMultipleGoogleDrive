@@ -428,6 +428,7 @@ namespace SyncMultipleGoogleDrives
             {
                 request.Q = "trashed=false";
             }
+            request.MaxResults = 1000;
 
             do
             {
@@ -596,7 +597,7 @@ namespace SyncMultipleGoogleDrives
             }
         }
 
-        public void UploadFile(string FullPath, string Name, string RelativePath)
+        public void UploadFile(string FullPath, string Name, string RelativePath, int Retries = 0)
         {
 
             if (credential == null)
@@ -614,56 +615,70 @@ namespace SyncMultipleGoogleDrives
 
                     if (!FileExists(FullPath, Name, RelativePath))
                     {
-                        _CurrentGoogleID = "";
-                        File body = new File();
-                        body.Title = Name;
-                        body.Description = Name;
-                        string parent = GetParentId(RelativePath);
-                        if (!string.IsNullOrEmpty(parent))
+                        try
                         {
-                            body.Parents = new List<ParentReference>() { new ParentReference() { Id = parent } };
-                        }
-                        else
-                        {
-                            if (!string.IsNullOrEmpty(RootFolderID))
+                            _CurrentGoogleID = "";
+                            File body = new File();
+                            body.Title = Name;
+                            body.Description = Name;
+                            string parent = GetParentId(RelativePath);
+                            if (!string.IsNullOrEmpty(parent))
                             {
                                 body.Parents = new List<ParentReference>() { new ParentReference() { Id = parent } };
                             }
-                        }
-                        string mimetype = GetMIMEType(FullPath);
-                        if (mimetype != "unknown/unknown")
-                        {
-                            Trace.WriteLine("FullPath:" + FullPath, "DEVINFO GoogleAccount.UploadFile");
-                            Trace.WriteLine("Name:" + Name, "DEVINFO GoogleAccount.UploadFile");
-                            Trace.WriteLine("RelativePath:" + RelativePath, "DEVINFO GoogleAccount.UploadFile");
-
-                            body.MimeType = mimetype;
-                            byte[] byteArray = System.IO.File.ReadAllBytes(FullPath);
-                            _bytesToUpload = byteArray.Length;
-                            System.IO.MemoryStream stream = new System.IO.MemoryStream(byteArray);
-
-                            FilesResource.InsertMediaUpload request = service.Files.Insert(body, stream, "text/plain");
-                            request.ProgressChanged += request_ProgressChanged;
-                            request.Upload();
-
-                            File file = request.ResponseBody;
-
-                            Item newFile = new Item();
-                            newFile.Name = Name;
-                            newFile.IsFolder = false;
-                            if (!string.IsNullOrEmpty(RelativePath))
-                            {
-                                newFile.Path = RootFolder + "\\" + RelativePath + "\\" + Name;
-                            }
                             else
                             {
-                                newFile.Path = RootFolder + "\\" + Name;
+                                if (!string.IsNullOrEmpty(RootFolderID))
+                                {
+                                    body.Parents = new List<ParentReference>() { new ParentReference() { Id = parent } };
+                                }
                             }
-                            newFile.GoogleID = file.Id;
-                            newFile.GoogleParentID = parent;
-                            AddToListOnGoogleDrive(newFile);
-                            _CurrentGoogleID = file.Id;
-                            Trace.WriteLine("File id: " + file.Id, "DEVINFO GoogleAccount.UploadFile");
+                            string mimetype = GetMIMEType(FullPath);
+                            if (mimetype != "unknown/unknown")
+                            {
+                                Trace.WriteLine("FullPath:" + FullPath, "DEVINFO GoogleAccount.UploadFile");
+                                Trace.WriteLine("Name:" + Name, "DEVINFO GoogleAccount.UploadFile");
+                                Trace.WriteLine("RelativePath:" + RelativePath, "DEVINFO GoogleAccount.UploadFile");
+
+                                body.MimeType = mimetype;
+                                byte[] byteArray = System.IO.File.ReadAllBytes(FullPath);
+                                _bytesToUpload = byteArray.Length;
+                                System.IO.MemoryStream stream = new System.IO.MemoryStream(byteArray);
+
+                                FilesResource.InsertMediaUpload request = service.Files.Insert(body, stream, "text/plain");
+                                request.ProgressChanged += request_ProgressChanged;
+                                request.Upload();
+
+                                File file = request.ResponseBody;
+
+                                Item newFile = new Item();
+                                newFile.Name = Name;
+                                newFile.IsFolder = false;
+                                if (!string.IsNullOrEmpty(RelativePath))
+                                {
+                                    newFile.Path = RootFolder + "\\" + RelativePath + "\\" + Name;
+                                }
+                                else
+                                {
+                                    newFile.Path = RootFolder + "\\" + Name;
+                                }
+                                newFile.GoogleID = file.Id;
+                                newFile.GoogleParentID = parent;
+                                AddToListOnGoogleDrive(newFile);
+                                _CurrentGoogleID = file.Id;
+                                Trace.WriteLine("File id: " + file.Id, "DEVINFO GoogleAccount.UploadFile");
+                            }
+
+                        }
+                        catch(Exception ex)
+                        {
+                            Trace.WriteLine(ex.Message, "EXCEPTION UploadFile");
+                            // Retry
+                            if (Retries < 3)
+                            {
+                                Thread.Sleep(5000);
+                                UploadFile(FullPath, Name, RelativePath, Retries++);
+                            }
                         }
 
 
