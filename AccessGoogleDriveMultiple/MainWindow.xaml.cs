@@ -49,6 +49,14 @@ namespace SyncMultipleGoogleDrives
 
         private static string _rootFolder = "";
 
+        public List<GoogleAccount> GoogleAccounts
+        {
+            get
+            {
+                return _GoogleAccounts;
+            }
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -74,13 +82,23 @@ namespace SyncMultipleGoogleDrives
 
             itemProvider = new ItemProvider();
             items = itemProvider.GetItems(txtRootFolder.Text);
-            tvFilesFolders.DataContext = items;
+            //tvFilesFolders.DataContext = items;
+
+            //lstFiles.DataContext = items;
+            
 
             txtRootFolder.TextChanged += txtRootFolder_TextChanged;
 
             GetGoogleAccountSettings();
             AdaptGoogleAccountList();
+
+            
             SetColorsOfItemList(items);
+            //cmb_GoogleAccount.ItemsSource = GoogleAccounts;
+            
+            
+
+            lstFiles.ItemsSource = items;
         }
 
         void txtRootFolder_TextChanged(object sender, TextChangedEventArgs e)
@@ -90,7 +108,8 @@ namespace SyncMultipleGoogleDrives
 
             var items = itemProvider.GetItems(txtRootFolder.Text);
 
-            tvFilesFolders.DataContext = items;
+            //tvFilesFolders.DataContext = items;
+            lstFiles.ItemsSource = items;
 
             if (_GoogleAccounts != null && _GoogleAccounts.Count > 0)
             {
@@ -346,6 +365,7 @@ namespace SyncMultipleGoogleDrives
                                     if (ga.FileFilter == "*")
                                     {
                                         _forecolor = "Green";
+                                        item.GoogleAccount = ga.Name;
                                         ga.AddToListToUpload(item);
                                     }
                                     else
@@ -353,16 +373,19 @@ namespace SyncMultipleGoogleDrives
                                         if (ga.FileFilter.EndsWith("*") && pathminushome.StartsWith(ga.FileFilter.Replace("*", "")))
                                         {
                                             _forecolor = "Green";
+                                            item.GoogleAccount = ga.Name;
                                             ga.AddToListToUpload(item);
                                         }
                                         else if (ga.FileFilter.StartsWith("*") && pathminushome.EndsWith(ga.FileFilter.Replace("*", "")))
                                         {
                                             _forecolor = "Green";
+                                            item.GoogleAccount = ga.Name;
                                             ga.AddToListToUpload(item);
                                         }
                                         else if (ga.FileFilter.Contains("*") && pathminushome.Contains(ga.FileFilter.Replace("*", "")))
                                         {
                                             _forecolor = "Green";
+                                            item.GoogleAccount = ga.Name;
                                             ga.AddToListToUpload(item);
                                         }
                                     }

@@ -24,7 +24,28 @@
         <TextBox x:Name="txtRootFolder" HorizontalAlignment="Left" Height="23" Margin="10,31,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="417"/>
         <Button Content="Button" HorizontalAlignment="Left" Margin="432,31,0,0" VerticalAlignment="Top" Width="75" Height="23" Click="Button_Click_1"/>
 
-        <TreeView x:Name="tvFilesFolders" ItemsSource="{Binding}" Margin="10,59,10,186" />
+        <!--<TreeView x:Name="tvFilesFolders" ItemsSource="{Binding}" Margin="10,59,10,186" /> -->
+        <ListView  x:Name="lstFiles" Margin="10,59,10,186"  ItemsSource="{Binding}">
+            <ListView.View>
+                <GridView x:Name="grdFiles">
+                    <GridViewColumn Header="Account" >
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox x:Name="cmb_GoogleAccount" 
+                                          Width="75" 
+                                          SelectedValue="{Binding GoogleAccount}"                    
+                                          ItemsSource="{Binding GoogleAccounts, RelativeSource={RelativeSource AncestorType=GridView}}" 
+                                          HorizontalAlignment="Stretch" 
+                                          VerticalAlignment="Stretch"
+                                          />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                    <GridViewColumn Header="Path"  DisplayMemberBinding="{Binding Path}"/>
+                </GridView>
+            </ListView.View>
+
+        </ListView>
         <Button x:Name="btnSynch" Content="Synchronize" Margin="10,0,0,161" Click="btnSynch_Click" HorizontalAlignment="Left" Width="75" Height="20" VerticalAlignment="Bottom"/>
         <Label Content="Current Account" HorizontalAlignment="Left" Margin="10,0,0,130" Width="100" Height="26" VerticalAlignment="Bottom"/>
         <Label Content="Current folder" HorizontalAlignment="Left" Margin="10,0,0,99" Width="100" Height="26" VerticalAlignment="Bottom"/>
