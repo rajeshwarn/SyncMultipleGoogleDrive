@@ -30,13 +30,13 @@
                 <GridView x:Name="grdFiles">
                     <GridViewColumn Header="Account" >
                         <GridViewColumn.CellTemplate>
-                            <DataTemplate>
+                            <DataTemplate >
                                 <ComboBox x:Name="cmb_GoogleAccount" 
                                           Width="75" 
-                                          SelectedValue="{Binding GoogleAccount}"                    
-                                          ItemsSource="{Binding GoogleAccounts, RelativeSource={RelativeSource AncestorType=GridView}}" 
                                           HorizontalAlignment="Stretch" 
                                           VerticalAlignment="Stretch"
+                                          ItemsSource="{Binding GoogleAccounts, RelativeSource={RelativeSource AncestorType=Window}}"
+                                          SelectedValue="{Binding Option}"
                                           />
                             </DataTemplate>
                         </GridViewColumn.CellTemplate>

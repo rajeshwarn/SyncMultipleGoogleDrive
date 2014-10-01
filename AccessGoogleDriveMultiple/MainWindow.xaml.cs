@@ -63,7 +63,7 @@ namespace SyncMultipleGoogleDrives
 
             cs = new CurrentSynchro();
 
-            DataContext = cs;
+            DataContext = this;
 
             if (string.IsNullOrEmpty(Properties.Settings.Default.rootFolder))
             {

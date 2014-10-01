@@ -45,6 +45,11 @@ namespace SyncMultipleGoogleDrives
             _itemListToUpload.Add(item);
         }
 
+        public override string ToString()
+        {
+            return Name;
+        }
+
         public List<Item> ItemListToUpload
         {
             get
